@@ -1,0 +1,33 @@
+# Reusable backend unit for a per-subdomain project.
+#
+# Each instance "<name>" needs:
+#   - working dir:   /srv/apps/<name>
+#   - env file:      /etc/connorcantrell/<name>.env   (defines START_CMD, PORT, ...)
+#
+# Example /etc/connorcantrell/iracing.env:
+#   START_CMD=node server.js
+#   PORT=8001
+#
+# Enable + start:
+#   sudo systemctl enable --now app@iracing
+# Then add a matching reverse_proxy block in the Caddyfile and reload Caddy.
+
+[Unit]
+Description=connorcantrell.com app backend — %i
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+User=foundation
+Group=foundation
+WorkingDirectory=/srv/apps/%i
+EnvironmentFile=/etc/connorcantrell/%i.env
+ExecStart=/bin/sh -lc '${START_CMD}'
+Restart=always
+RestartSec=2
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
