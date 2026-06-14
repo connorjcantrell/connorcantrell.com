@@ -1,0 +1,116 @@
+:root {
+	color-scheme: dark;
+	--bg: #0f1115;
+	--fg: #e6e8ec;
+	--muted: #9aa0aa;
+	--ease: cubic-bezier(.16, .84, .28, 1);
+	--dur: .6s;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+	margin: 0;
+	height: 100%;
+	overflow: hidden;          /* no scroll, no scrollbar — navigation is snap-only */
+	overscroll-behavior: none;
+	background: var(--bg);
+	color: var(--fg);
+	font: 16px/1.6 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+/* The plane of screens. Translated so the active node sits in the viewport. */
+#world {
+	position: fixed;
+	inset: 0;
+	transform: translate(calc(var(--col, 0) * -100vw), calc(var(--row, 0) * -100dvh));
+	transition: transform var(--dur) var(--ease);
+	will-change: transform;
+}
+
+.screen {
+	position: absolute;
+	left: calc(var(--c) * 100vw);
+	top: calc(var(--r) * 100dvh);
+	width: 100vw;
+	height: 100dvh;
+	display: grid;
+	place-items: center;
+	padding: 2rem;
+	text-align: center;
+}
+
+.inner { max-width: 38rem; }
+
+h1 {
+	margin: 0;
+	font-size: clamp(2rem, 6vw, 3rem);
+	letter-spacing: -0.02em;
+}
+
+h2 {
+	margin: 0 0 .75rem;
+	font-size: clamp(1.4rem, 4vw, 2rem);
+	letter-spacing: -0.01em;
+}
+
+p { margin: 0 0 1rem; color: var(--muted); }
+
+.eyebrow {
+	margin: 0 0 1rem;
+	text-transform: uppercase;
+	letter-spacing: .18em;
+	font-size: .72rem;
+	color: var(--muted);
+}
+
+.hero-hint { margin: 1.25rem 0 0; opacity: .7; }
+
+/* Minimap overlay — a scaled picture of the graph with the active node filled. */
+#map {
+	position: fixed;
+	top: 1rem;
+	right: 1rem;
+	opacity: .4;
+	pointer-events: none;
+	z-index: 10;
+}
+
+#map line { stroke: var(--muted); stroke-width: 1; }
+#map circle { fill: var(--bg); stroke: var(--muted); stroke-width: 1.5; }
+#map circle.active { fill: var(--fg); stroke: var(--fg); }
+
+/* Direction hints — subtle chevrons pointing toward the available exits. */
+#hints {
+	position: fixed;
+	inset: 0;
+	pointer-events: none;
+	z-index: 9;
+}
+
+.hint {
+	position: absolute;
+	width: 13px;
+	height: 13px;
+	border: solid var(--muted);
+	border-width: 0 2px 2px 0;
+	opacity: 0;
+	transition: opacity .4s var(--ease);
+}
+
+.hint.on { opacity: .45; animation: bob 1.8s var(--ease) infinite; }
+
+.hint.up    { top: 1.5rem;    left: 50%; transform: translateX(-50%) rotate(-135deg); }
+.hint.down  { bottom: 1.5rem; left: 50%; transform: translateX(-50%) rotate(45deg); }
+.hint.left  { left: 1.5rem;   top: 50%;  transform: translateY(-50%) rotate(135deg); }
+.hint.right { right: 1.5rem;  top: 50%;  transform: translateY(-50%) rotate(-45deg); }
+
+@keyframes bob {
+	0%, 100% { opacity: .2; }
+	50%      { opacity: .55; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	#world { transition: none; }
+	.hint.on { animation: none; }
+}

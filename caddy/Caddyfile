@@ -1,0 +1,60 @@
+# connorcantrell.com — Caddy reverse proxy
+#
+# Caddy is the single local router. Cloudflare terminates TLS at its edge and a
+# tunnel forwards plain HTTP to this proxy, which routes by Host header to local
+# upstreams and serves the static apex page.
+#
+# Deployed to: /etc/caddy/Caddyfile  (see docs/runbook.md)
+# Reload after edits:  sudo systemctl reload caddy   (zero-downtime)
+
+{
+	# TLS is handled at the Cloudflare edge; this proxy speaks plain HTTP.
+	auto_https off
+
+	# Traffic arrives via the local cloudflared connector (loopback), so trust
+	# private ranges and read the real visitor IP from Cloudflare's header.
+	servers {
+		trusted_proxies static private_ranges
+		client_ip_headers Cf-Connecting-Ip X-Forwarded-For
+	}
+
+	# Runtime logs to stdout -> captured by journald (systemd).
+	log {
+		output stdout
+		format console
+	}
+}
+
+# --- Apex: static landing page -------------------------------------------
+http://connorcantrell.com {
+	root * /var/www/apex
+	encode gzip
+	file_server
+}
+
+# --- Example project upstream --------------------------------------------
+# To add a new project: copy this block, change the hostname + port, then
+#   sudo systemctl reload caddy
+# No DNS or tunnel change is needed — the wildcard ingress + wildcard CNAME
+# already route every *.connorcantrell.com to this proxy.
+http://test.connorcantrell.com {
+	reverse_proxy localhost:8099
+}
+
+# --- Catch-all: reject unknown hosts -------------------------------------
+# The tunnel's wildcard ingress forwards every *.connorcantrell.com here, so
+# an undefined subdomain reaches Caddy with no matching site block. Without
+# this block Caddy answers an empty 200; instead, return a clean 404. Named
+# blocks above are more specific and still take precedence.
+http:// {
+	respond 404
+}
+
+# --- Streaming / SSE upstreams (e.g. a future LLM chat endpoint) ----------
+# Disable response buffering so server-sent events stream incrementally:
+#
+# http://graph.connorcantrell.com {
+# 	reverse_proxy localhost:8002 {
+# 		flush_interval -1
+# 	}
+# }

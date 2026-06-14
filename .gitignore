@@ -1,6 +1,23 @@
-_site
-.sass-cache
-.jekyll-cache
-.jekyll-metadata
-Gemfile.lock
-vendor
+# --- Secrets: never commit ---
+# Cloudflare Tunnel credentials (created by `cloudflared tunnel create`)
+cloudflared/*.json
+cert.pem
+*.pem
+
+# Environment / secrets files
+.env
+.env.*
+/etc-local/
+
+# --- Local tool config (per-developer, not shared) ---
+.claude/settings.local.json
+
+# --- OS / editor noise ---
+.DS_Store
+*.swp
+*~
+
+# --- Build / deps (for future per-project apps living in this repo) ---
+node_modules/
+__pycache__/
+*.log
